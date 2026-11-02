@@ -1,0 +1,15 @@
+/Dossier_assistant_vocal_Fairphone5.zip
+/.local/
+/.tools/
+/.gradle/
+/.kotlin/
+/.idea/
+**/build/
+/local.properties
+*.iml
+*.apk
+*.aab
+*.jks
+*.keystore
+.DS_Store
+Thumbs.db
