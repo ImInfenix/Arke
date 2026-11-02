@@ -6,9 +6,11 @@ Arke vise un échange vocal permettant de choisir un contact, dicter un WhatsApp
 
 ## État du projet
 
-Initialisation du dépôt et cadrage. Aucune application ni aucun APK ne sont encore disponibles. La prochaine étape est un prototype de faisabilité sur le téléphone cible, après préparation de l'environnement Android.
+Un prototype Android est disponible dans les sources. Il propose un dialogue vocal local, un parcours écrit, la sélection des contacts, la correction et la confirmation des brouillons, ainsi que la lecture et la réponse aux notifications WhatsApp compatibles.
 
-L'envoi d'un nouveau WhatsApp entièrement à la voix, l'activation écran éteint et le fonctionnement au verrouillage restent à démontrer. Une conversation ouverte avec un texte prérempli ne constitue pas un envoi réussi.
+**Ce prototype ne réalise pas l'envoi automatique d'un nouveau WhatsApp.** Il demande confirmation avant de préparer la conversation ; l'envoi reste manuel dans WhatsApp. La réponse à une notification compatible utilise son action Android après relecture et confirmation. Une demande transmise ne prouve pas la livraison.
+
+Le dialogue est bloqué au verrouillage. L'activation par geste d'assistant et la qualité des voix doivent encore être vérifiées sur le Fairphone. Le jalon d'usage mains libres en voiture n'est pas atteint.
 
 ## Principes
 
@@ -21,7 +23,11 @@ L'envoi d'un nouveau WhatsApp entièrement à la voix, l'activation écran étei
 
 ## Développement
 
-- [Préparer l'environnement](docs/DEVELOPMENT.md).
+- Sous PowerShell : `./scripts/build.ps1` lance les tests, produit l'APK de débogage et exécute l'analyse Android.
+- APK local : `app/build/outputs/apk/debug/app-debug.apk` ; Android 12 ou ultérieur.
+- [Environnement et compilation](docs/DEVELOPMENT.md).
+- [Installation et premiers essais](docs/TESTING.md).
+- [Faisabilité et limites](docs/FEASIBILITY.md).
 - [Jalons et critères de validation](docs/ROADMAP.md).
 
 Le dossier de cadrage original est conservé localement dans `.local/briefing/`. Ce dossier et son archive sont exclus de Git. Les fichiers versionnés décrivent uniquement le projet et son développement.

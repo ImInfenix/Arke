@@ -2,6 +2,8 @@
 
 Tous les jalons fonctionnels ci-dessous restent à valider. Aucun tag de livraison ne sera créé avant l'obtention d'un résultat testable.
 
+Le prototype `0.1.0-prototype` fournit un résultat installable pour l'étude du jalon 0 et implémente des protections prévues aux jalons suivants. Il ne valide pas leur réception sur appareil : nouveau message préparé avec envoi manuel, réponses limitées aux notifications compatibles et dialogue bloqué au verrouillage.
+
 | Jalon | Résultat attendu | Validation |
 | --- | --- | --- |
 | 0 — Faisabilité | Conversation française locale, sélection d'un contact et exploration des possibilités WhatsApp | Essais distincts déverrouillé, écran éteint et verrouillé ; limites et mesures consignées |
