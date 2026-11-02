@@ -122,10 +122,6 @@ class MainActivity : Activity(), LocalVoice.Listener {
 
     override fun onTranscript(text: String, confidence: Float?) {
         if (!resumed || !voiceSession || !checkUnlocked()) return
-        if (confidence != null && confidence < 0.65f) {
-            render(Turn("Je ne suis pas assez sûr de ce que j'ai entendu. Répète ta réponse.", listen = true))
-            return
-        }
         submit(text)
     }
 

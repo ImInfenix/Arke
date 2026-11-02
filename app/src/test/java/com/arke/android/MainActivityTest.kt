@@ -42,6 +42,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
 import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowContentResolver
+import org.robolectric.shadows.ShadowSpeechRecognizer
 import org.robolectric.shadows.ShadowTextToSpeech
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
@@ -77,6 +78,43 @@ class MainActivityTest {
     @After
     fun tearDown() {
         controller.pause().stop().destroy()
+    }
+
+    @Test
+    fun lowConfidenceSpeechCanCompleteTheDialogueWithoutSkippingConfirmation() {
+        installContacts()
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.RECORD_AUDIO)
+        ShadowSpeechRecognizer.setIsOnDeviceRecognitionAvailable(true)
+        button(R.string.talk).performClick()
+
+        activity.onTranscript("Envoie un WhatsApp à Camille", 0f)
+        assertTrue(prompt.text.toString().contains("quel message", ignoreCase = true))
+        activity.onTranscript("N'oublie pas d'envoyer le dossier", 0.2f)
+        assertTrue(prompt.text.toString().contains("N'oublie pas d'envoyer le dossier"))
+        assertTrue(prompt.text.toString().contains("Tu confirmes l'envoi"))
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
+
+        activity.onTranscript("oui, envoie", 0.1f)
+        awaitUi { prompt.text.toString().contains("Active le service") }
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
+    }
+
+    @Test
+    fun lowConfidenceSpeechStillAllowsCancellationAndNeverConfirmsFromIdle() {
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.RECORD_AUDIO)
+        ShadowSpeechRecognizer.setIsOnDeviceRecognitionAvailable(true)
+        button(R.string.talk).performClick()
+
+        activity.onTranscript("oui, envoie", 0f)
+        assertTrue(prompt.text.toString().startsWith("Tu peux demander un WhatsApp"))
+        activity.onTranscript("Envoie un WhatsApp à Camille", 0.3f)
+        assertTrue(prompt.text.toString().contains("Je ne trouve pas ce contact"))
+        activity.onTranscript("annule", 0f)
+        assertTrue(prompt.text.toString().contains("annulé"))
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
     }
 
     @Test

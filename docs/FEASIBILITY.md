@@ -25,7 +25,7 @@ L'envoi automatique repose désormais sur un service d'accessibilité Android, e
 
 ## Protection des échanges
 
-Le microphone fonctionne par tours de parole et s'arrête pendant la synthèse. Une relecture doit se terminer avant la reprise vocale. Les callbacks périmés sont ignorés. Une reconnaissance accompagnée d'un score inférieur à 0,65 demande une répétition ; certains moteurs ne fournissent pas de score, et aucun seuil ne garantit à lui seul l'exactitude. Le destinataire et le contenu sont donc toujours relus avant confirmation.
+Le microphone fonctionne par tours de parole et s'arrête pendant la synthèse. Une relecture doit se terminer avant la reprise vocale. Les callbacks périmés sont ignorés. Le score de reconnaissance Android est facultatif et ne bloque pas à lui seul une transcription. Le destinataire et le contenu reconnus sont toujours relus avant confirmation explicite ; un simple « oui » hors de cet état ne déclenche aucune action.
 
 Les confirmations, le contexte de réponse et les notifications ont une durée limitée. Un contact ou une notification modifiés invalident l'action. Une tentative de réponse au résultat incertain n'est pas répétée automatiquement. La protection contre répétition vit dans le processus, sans persistance des messages ; chaque nouvelle conversation nécessite un nouveau consentement.
 
