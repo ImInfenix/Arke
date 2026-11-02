@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Arke</string>
+    <string name="notification_service_name">Arke · messages WhatsApp sur demande</string>
+    <string name="tagline">Votre voix. Votre téléphone.</string>
+    <string name="eyebrow">ASSISTANT LOCAL</string>
+    <string name="prototype_notice">Prototype de faisabilité\nNouveau WhatsApp : préparation uniquement, envoi manuel. Réponse vocale possible si une notification compatible est accessible.</string>
+    <string name="welcome">Que veux-tu faire ?</string>
+    <string name="ready">Prêt à vous écouter</string>
+    <string name="talk">Parler</string>
+    <string name="cancel">Annuler</string>
+    <string name="read_messages">Lire mes WhatsApp accessibles</string>
+    <string name="examples">« Envoie un WhatsApp à Camille »\n« Lis le dernier WhatsApp de Camille »\n« Réponds que j’arrive bientôt »</string>
+    <string name="privacy">La lecture commence uniquement à votre demande. Aucun audio ni message conservé sur disque. Microphone actif seulement pendant le dialogue.</string>
+    <string name="write_command">Écrire une demande</string>
+    <string name="command_hint">Votre demande ou votre réponse</string>
+    <string name="submit">Valider le texte</string>
+    <string name="setup">Configurer Arke</string>
+    <string name="grant_contacts">Autoriser les contacts</string>
+    <string name="notification_access">Accès aux notifications</string>
+    <string name="assistant_settings">Choisir l’assistant Android</string>
+    <string name="voice_settings">Voix et langues hors ligne</string>
+    <string name="refresh">Actualiser le diagnostic</string>
+    <string name="locked">Déverrouille le téléphone pour utiliser Arke.</string>
+    <string name="mic_required">Autorise le microphone pour parler à Arke. Tu peux aussi écrire ta demande.</string>
+    <string name="settings_unavailable">Ce réglage n’est pas disponible sur cet appareil.</string>
+    <string name="contacts_unavailable">Impossible de charger les contacts. Vérifie leur autorisation.</string>
+    <string name="notification_explanation">Android donne accès aux notifications. Arke ne traite que les messages WhatsApp individuels compatibles, à votre demande, sans les enregistrer. Les groupes et l’historique complet ne sont pas pris en charge.</string>
+    <string name="continue_action">Continuer</string>
+    <string name="close">Fermer</string>
+    <string name="session_expired">Conversation arrêtée après une minute sans réponse.</string>
+    <string name="voice_stopped">Dialogue vocal arrêté</string>
+    <string name="reading_finished">Lecture terminée · répondez par écrit ou appuyez sur Parler</string>
+    <string name="local_voice_required">Le dialogue nécessite une reconnaissance locale et une voix française hors ligne. Consulte Configurer Arke ; tu peux aussi écrire ta demande.</string>
+    <string name="contacts_loading">Les contacts sont en cours de chargement. Réessaie dans un instant.</string>
+    <string name="resume_listening">Reprendre l’écoute</string>
+    <string name="text_only">Voix locale indisponible · affichage uniquement</string>
+</resources>
