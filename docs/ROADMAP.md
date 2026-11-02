@@ -2,7 +2,7 @@
 
 Tous les jalons fonctionnels ci-dessous restent à valider. Aucun tag de livraison ne sera créé avant l'obtention d'un résultat testable.
 
-Le prototype `0.1.0-prototype` fournit un résultat installable pour l'étude du jalon 0 et implémente des protections prévues aux jalons suivants. Il ne valide pas leur réception sur appareil : nouveau message préparé avec envoi manuel, réponses limitées aux notifications compatibles et dialogue bloqué au verrouillage.
+Le prototype `0.2.0-prototype` ajoute l'envoi automatique après confirmation via un service d'accessibilité. Il vérifie le numéro et le texte avant un unique clic ; les interfaces inconnues sont refusées. La réception sur Fairphone, les gestes d'assistant et la fiabilité du véritable WhatsApp restent à valider ; le dialogue reste bloqué au verrouillage.
 
 | Jalon | Résultat attendu | Validation |
 | --- | --- | --- |

@@ -9,19 +9,19 @@ Les mécanismes ci-dessous sont documentés. Leur présence dans le code ne cons
 | Reconnaissance | `SpeechRecognizer.createOnDeviceSpeechRecognizer`, Android 12+ | Service et français hors ligne à vérifier sur le téléphone ; aucun repli distant |
 | Synthèse | Voix française Android avec `isNetworkConnectionRequired=false` | Une voix locale doit être installée |
 | Contacts | Fournisseur Contacts Android, autorisation explicite | Numéros internationaux utilisables uniquement ; homonymes soumis à choix |
-| Nouveau WhatsApp | Click to Chat, conversation et texte préparés après confirmation | Envoi manuel ; aucun résultat de livraison disponible |
+| Nouveau WhatsApp | Click to Chat puis service d'accessibilité après confirmation | Interface reconnue et numéro vérifié obligatoires ; aucun résultat de livraison disponible |
 | Lecture | Notifications WhatsApp individuelles structurées, encore accessibles | Aucun historique intégral, ni groupes, ni notifications masquées |
 | Réponse | `RemoteInput` de l'action de notification, après confirmation | Action à revalider ; transmission à WhatsApp seulement, livraison inconnue |
 | Activation | Bouton, tuile de réglages rapides, Activity `ACTION_ASSIST` | Sélection de l'assistant et gestes dépendants du système |
 | Verrouillage | Blocage du dialogue, de la lecture et des actions | Politique conservatrice du prototype, à arbitrer après essais |
 
-Le dossier original réserve un arbitrage au propriétaire si seul un parcours partiellement manuel est possible. Le prototype rend ce compromis testable ; il ne remplace pas l'objectif d'envoi entièrement vocal par une fonctionnalité déclarée équivalente.
+Le propriétaire a demandé l'envoi automatique après confirmation. La version 0.2.0 ajoute cette automatisation ; sa compatibilité avec le véritable WhatsApp du Fairphone reste à valider.
 
 ## Nouveau message : incertitude principale
 
 La [documentation WhatsApp Click to Chat](https://faq.whatsapp.com/5913398998672934) décrit l'ouverture d'une conversation et le préremplissage d'un message. Elle ne démontre pas une transmission automatique depuis une application personnelle. La recherche documentaire n'a pas établi de mécanisme officiel général permettant cet envoi depuis le compte WhatsApp personnel ; cela ne prouve pas une impossibilité absolue.
 
-Le prototype n'emploie ni automatisation d'interface par accessibilité, ni service cloud, ni API d'entreprise comme substitut au compte personnel. Il expose clairement la préparation et ne certifie jamais un envoi après l'ouverture de WhatsApp.
+L'envoi automatique repose désormais sur un service d'accessibilité Android, et non sur une API d'envoi WhatsApp officielle. Le service ne consulte l'interface qu'après une confirmation. Il vérifie un numéro international dans un champ dédié de la fiche du contact, puis le retour à la conversation et le texte exact avant un unique clic. Les identifiants de vues WhatsApp ne sont pas contractuels : une version incompatible provoque un arrêt. Aucun clic par coordonnées ni recherche du bouton par un simple mot n'est utilisé. Les délais sont bornés à 30 secondes depuis la confirmation, avec une preuve du numéro valable 5 secondes. Aucun envoi n'est tenté à nouveau automatiquement. [Documentation Android du service](https://developer.android.com/reference/android/accessibilityservice/AccessibilityService).
 
 ## Protection des échanges
 

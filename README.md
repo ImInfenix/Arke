@@ -8,7 +8,7 @@ Arke vise un échange vocal permettant de choisir un contact, dicter un WhatsApp
 
 Un prototype Android est disponible dans les sources. Il propose un dialogue vocal local, un parcours écrit, la sélection des contacts, la correction et la confirmation des brouillons, ainsi que la lecture et la réponse aux notifications WhatsApp compatibles.
 
-**Ce prototype ne réalise pas l'envoi automatique d'un nouveau WhatsApp.** Il demande confirmation avant de préparer la conversation ; l'envoi reste manuel dans WhatsApp. La réponse à une notification compatible utilise son action Android après relecture et confirmation. Une demande transmise ne prouve pas la livraison.
+Après relecture et confirmation explicite, Arke peut ouvrir WhatsApp, vérifier le numéro dans la fiche du contact, revenir au texte confirmé et appuyer une seule fois sur Envoyer. Le service **Arke · envoi WhatsApp confirmé** doit être activé dans les paramètres d'accessibilité. Une interface inconnue, un numéro différent ou un texte modifié arrêtent l'opération. La livraison reste non confirmée.
 
 Le dialogue est bloqué au verrouillage. L'activation par geste d'assistant et la qualité des voix doivent encore être vérifiées sur le Fairphone. Le jalon d'usage mains libres en voiture n'est pas atteint.
 
