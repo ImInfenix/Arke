@@ -22,6 +22,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import com.arke.android.platform.send.WhatsAppSendAccessibilityService
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -132,6 +133,38 @@ class MainActivityTest {
     }
 
     @Test
+    fun automaticSendingSettingsRequireAcceptingTheAccessExplanation() {
+        button(R.string.setup).performClick()
+        button(R.string.auto_send_settings).performClick()
+
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        assertNotNull(dialog)
+        assertEquals(activity.getString(R.string.auto_send_explanation), shadowOf(dialog).message.toString())
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(Settings.ACTION_ACCESSIBILITY_SETTINGS, shadowOf(activity).nextStartedActivity.action)
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
+    }
+
+    @Test
+    fun decliningAutomaticSendingAccessDoesNotOpenSettingsOrArmAnAction() {
+        button(R.string.setup).performClick()
+        button(R.string.auto_send_settings).performClick()
+
+        ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(ShadowAlertDialog.getLatestAlertDialog().isShowing)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
+    }
+
+    @Test
     fun aLockedDeviceRejectsCommandsAndVoiceActivation() {
         val keyguard = shadowOf(activity.getSystemService(KeyguardManager::class.java))
         keyguard.setIsDeviceLocked(true)
@@ -184,26 +217,27 @@ class MainActivityTest {
     }
 
     @Test
-    fun changingTheContactAfterPreviewPreventsPreparingWhatsApp() {
+    fun changingTheContactAfterPreviewPreventsSendingWhatsApp() {
         val provider = installContacts()
         submit("Envoie un WhatsApp à Camille que je serai là demain")
         assertTrue(prompt.text.toString().contains("5678"))
-        assertTrue(prompt.text.toString().contains("Tu confirmes la préparation"))
+        assertTrue(prompt.text.toString().contains("Tu confirmes l'envoi"))
 
         provider.phoneNumber = "+33687654321"
         submit("oui")
         awaitUi { prompt.text.toString().contains("Le contact a changé") }
 
         assertTrue(provider.queryCount.get() >= 2)
-        assertTrue(prompt.text.toString().contains("Aucun message préparé"))
+        assertEquals(activity.getString(R.string.changed_contact), prompt.text.toString())
         assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
     }
 
     @Test
-    fun pausingWhileTheContactIsRecheckedDiscardsThePreparation() {
+    fun pausingWhileTheContactIsRecheckedDiscardsTheSendRequest() {
         val provider = installContacts()
         submit("Envoie un WhatsApp à Camille que je serai là demain")
-        assertTrue(prompt.text.toString().contains("Tu confirmes la préparation"))
+        assertTrue(prompt.text.toString().contains("Tu confirmes l'envoi"))
         val gate = QueryGate()
         provider.nextQueryGate = gate
 
@@ -222,6 +256,24 @@ class MainActivityTest {
         }
 
         assertEquals(activity.getString(R.string.welcome), prompt.text.toString())
+        assertNull(shadowOf(activity).nextStartedActivity)
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
+    }
+
+    @Test
+    fun confirmingWithoutAnAccessibilityServiceDoesNotOpenWhatsApp() {
+        assertFalse(WhatsAppSendAccessibilityService.isConnected())
+        val provider = installContacts()
+        submit("Envoie un WhatsApp à Camille que je serai là demain")
+        val confirmation = prompt.text.toString()
+        assertTrue(confirmation.contains("Tu confirmes l'envoi"))
+
+        submit("oui")
+        awaitUi { provider.queryCount.get() >= 2 && button(R.string.talk).isEnabled }
+
+        assertFalse(prompt.text.toString() == confirmation)
+        assertFalse(prompt.text.toString().contains("Action Envoyer déclenchée"))
+        assertFalse(WhatsAppSendAccessibilityService.hasPendingSend())
         assertNull(shadowOf(activity).nextStartedActivity)
     }
 

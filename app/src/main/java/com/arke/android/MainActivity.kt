@@ -13,6 +13,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.View
 import android.view.WindowInsets
@@ -24,8 +25,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.arke.android.platform.ContactRepository
-import com.arke.android.platform.WhatsAppLauncher
 import com.arke.android.platform.WhatsAppNotificationService
+import com.arke.android.platform.send.WhatsAppSendAccessibilityService
 import com.arke.core.Action
 import com.arke.core.Contact
 import com.arke.core.ConversationEngine
@@ -52,7 +53,7 @@ class MainActivity : Activity(), LocalVoice.Listener {
     private var pendingAssist = false
     private var expectsInput = false
     private var currentPrompt = ""
-    private var pendingPreparation: String? = null
+    private var pendingSend: String? = null
     private val ink = Color.rgb(26, 45, 40)
     private val green = Color.rgb(23, 105, 87)
     private val muted = Color.rgb(77, 96, 88)
@@ -80,6 +81,12 @@ class MainActivity : Activity(), LocalVoice.Listener {
     override fun onResume() {
         super.onResume()
         resumed = true
+        WhatsAppSendAccessibilityService.cancelPending(getString(R.string.auto_send_returned))
+        WhatsAppSendAccessibilityService.consumeOutcome()?.let { outcome ->
+            pendingAssist = false
+            engine.reset()
+            promptView.text = outcome
+        }
         refreshDiagnostics()
         loadContacts()
         maybeStartAssist()
@@ -164,6 +171,11 @@ class MainActivity : Activity(), LocalVoice.Listener {
 
     private fun startVoice() {
         if (!checkUnlocked()) return
+        if (WhatsAppSendAccessibilityService.hasPendingSend()) {
+            promptView.setText(R.string.auto_send_in_progress)
+            return
+        }
+        WhatsAppSendAccessibilityService.consumeOutcome()
         if (!hasPermission(Manifest.permission.RECORD_AUDIO)) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 10)
             promptView.setText(R.string.mic_required)
@@ -188,6 +200,10 @@ class MainActivity : Activity(), LocalVoice.Listener {
 
     private fun submit(text: String) {
         if (text.isBlank() || !checkUnlocked()) return
+        if (WhatsAppSendAccessibilityService.hasPendingSend()) {
+            render(Turn(getString(R.string.auto_send_in_progress)))
+            return
+        }
         if (loadingContacts) {
             render(Turn("Les contacts sont en cours de chargement. Réessaie dans un instant."))
             return
@@ -209,7 +225,7 @@ class MainActivity : Activity(), LocalVoice.Listener {
             voice.stop()
             expectsInput = false
             when (action) {
-                is Action.PrepareWhatsApp -> prepareWhatsApp(action)
+                is Action.SendWhatsApp -> sendWhatsApp(action)
                 is Action.Reply -> render(engine.complete(action.token,
                     WhatsAppNotificationService.reply(this, action.messageId, action.text)))
             }
@@ -220,7 +236,7 @@ class MainActivity : Activity(), LocalVoice.Listener {
     }
 
     private fun stopSession() {
-        pendingPreparation = null
+        pendingSend = null
         talkButton.isEnabled = true
         voiceSession = false
         expectsInput = false
@@ -231,21 +247,23 @@ class MainActivity : Activity(), LocalVoice.Listener {
         talkButton.setText(R.string.talk)
     }
 
-    private fun prepareWhatsApp(action: Action.PrepareWhatsApp) {
-        pendingPreparation = action.token
+    private fun sendWhatsApp(action: Action.SendWhatsApp) {
+        val confirmedAtMillis = SystemClock.elapsedRealtime()
+        pendingSend = action.token
         talkButton.isEnabled = false
         executor.execute {
             val freshContacts = runCatching { ContactRepository(this).load() }.getOrDefault(emptyList())
             handler.post {
-                if (!resumed || pendingPreparation != action.token || engine.stage != Stage.EXECUTING) return@post
+                if (!resumed || pendingSend != action.token || engine.stage != Stage.EXECUTING) return@post
                 if (!checkUnlocked()) return@post
-                pendingPreparation = null
+                pendingSend = null
                 talkButton.isEnabled = true
                 val outcome = if (freshContacts.any { it == action.contact }) {
-                    WhatsAppLauncher.prepare(this, action.contact, action.text)
+                    WhatsAppSendAccessibilityService.startConfirmedSend(this, action.contact, action.text, action.token, confirmedAtMillis)
                 } else {
-                    "Le contact a changé ou n'est plus accessible. Aucun message préparé. Recommence pour vérifier le destinataire."
+                    getString(R.string.changed_contact)
                 }
+                if (WhatsAppSendAccessibilityService.hasPendingSend()) voiceSession = false
                 render(engine.complete(action.token, outcome))
             }
         }
@@ -311,11 +329,13 @@ class MainActivity : Activity(), LocalVoice.Listener {
             "Contacts : $contactsStatus",
             "WhatsApp : ${if (whatsapp) "installé" else "absent"}",
             "Notifications : ${if (WhatsAppNotificationService.isConnected()) "accès connecté" else "accès non connecté"}",
+            "Envoi automatique : ${if (WhatsAppSendAccessibilityService.isConnected()) "service connecté" else "accessibilité à activer"}",
             "Téléphone verrouillé : dialogue désactivé"
         ).joinToString("\n")
     }
 
     private fun openSettings(action: String) {
+        WhatsAppSendAccessibilityService.cancelPending(getString(R.string.auto_send_cancelled))
         stopSession()
         try {
             startActivity(Intent(action))
@@ -370,6 +390,7 @@ class MainActivity : Activity(), LocalVoice.Listener {
         talkButton = button(getString(R.string.talk), true) { startVoice() }
         conversation.addView(talkButton)
         conversation.addView(button(getString(R.string.cancel)) {
+            WhatsAppSendAccessibilityService.cancelPending(getString(R.string.auto_send_cancelled))
             val turn = engine.cancel()
             stopSession()
             render(turn)
@@ -377,6 +398,7 @@ class MainActivity : Activity(), LocalVoice.Listener {
         root.addView(conversation)
         space(root, 12)
         root.addView(button(getString(R.string.read_messages)) {
+            WhatsAppSendAccessibilityService.cancelPending(getString(R.string.auto_send_cancelled))
             stopSession()
             if (!checkUnlocked()) return@button
             voiceSession = voiceReady && voice.hasFrenchVoice
@@ -427,6 +449,14 @@ class MainActivity : Activity(), LocalVoice.Listener {
                 .setTitle(R.string.notification_access)
                 .setMessage(R.string.notification_explanation)
                 .setPositiveButton(R.string.continue_action) { _, _ -> openSettings(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS) }
+                .setNegativeButton(R.string.close, null)
+                .show()
+        })
+        setupPanel.addView(button(getString(R.string.auto_send_settings)) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.auto_send_settings)
+                .setMessage(R.string.auto_send_explanation)
+                .setPositiveButton(R.string.continue_action) { _, _ -> openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS) }
                 .setNegativeButton(R.string.close, null)
                 .show()
         })

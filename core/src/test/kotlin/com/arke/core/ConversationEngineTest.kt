@@ -23,9 +23,9 @@ class ConversationEngineTest {
         val draft = input(engine, "J'arrive dans dix minutes.")
         assertEquals(Stage.CONFIRMATION, engine.stage)
         assertTrue(draft.prompt.contains("J'arrive dans dix minutes."))
-        assertTrue(draft.prompt.contains("envoi restera manuel"))
+        assertTrue(draft.prompt.contains("Tu confirmes l'envoi dans WhatsApp ?"))
         assertNull(draft.action)
-        val effect = input(engine, "Oui, prépare.").action as Action.PrepareWhatsApp
+        val effect = input(engine, "Oui, envoie.").action as Action.SendWhatsApp
         assertEquals(camille, effect.contact)
         assertEquals("J'arrive dans dix minutes.", effect.text)
     }
@@ -46,7 +46,7 @@ class ConversationEngineTest {
             val engine = ConversationEngine()
             input(engine, "Envoie à Camille")
             assertNull(input(engine, body).action)
-            val effect = input(engine, "oui").action as Action.PrepareWhatsApp
+            val effect = input(engine, "oui").action as Action.SendWhatsApp
             assertEquals(body, effect.text)
         }
     }
@@ -59,12 +59,23 @@ class ConversationEngineTest {
     }
 
     @Test
+    fun preparationOnlyWordingCannotAuthorizeAutomaticSending() {
+        for (phrase in listOf("prépare", "oui prépare", "oui, prépare", "prépare le message")) {
+            val engine = ConversationEngine()
+            input(engine, "Envoie à Camille que bonjour")
+            assertNull(input(engine, phrase).action)
+            assertEquals(Stage.CONFIRMATION, engine.stage)
+            assertTrue(input(engine, "oui envoie").action is Action.SendWhatsApp)
+        }
+    }
+
+    @Test
     fun naturalInlineRequestPreservesMessageText() {
         val engine = ConversationEngine()
         val first = input(engine, "Préviens Camille que j'aurai quinze minutes de retard.")
         assertEquals(Stage.CONFIRMATION, engine.stage)
         assertNull(first.action)
-        val effect = input(engine, "oui").action as Action.PrepareWhatsApp
+        val effect = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("j'aurai quinze minutes de retard.", effect.text)
     }
 
@@ -73,7 +84,7 @@ class ConversationEngineTest {
         val engine = ConversationEngine()
         input(engine, "Tu peux prévenir Camille que j'arrive bientôt")
         assertEquals(Stage.CONFIRMATION, engine.stage)
-        val effect = input(engine, "je confirme").action as Action.PrepareWhatsApp
+        val effect = input(engine, "je confirme").action as Action.SendWhatsApp
         assertEquals("j'arrive bientôt", effect.text)
     }
 
@@ -81,7 +92,7 @@ class ConversationEngineTest {
     fun bodyAfterLongDelimiterIsNotRewritten() {
         val engine = ConversationEngine()
         input(engine, "Envoie un WhatsApp à Camille pour lui dire que je suis en retard")
-        val effect = input(engine, "oui").action as Action.PrepareWhatsApp
+        val effect = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("je suis en retard", effect.text)
     }
 
@@ -95,7 +106,7 @@ class ConversationEngineTest {
         assertNull(input(engine, "oui").action)
         input(engine, "Alex Martin")
         assertEquals(Stage.CONFIRMATION, engine.stage)
-        val effect = input(engine, "oui").action as Action.PrepareWhatsApp
+        val effect = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals(alexMartin, effect.contact)
         assertEquals("je passe demain", effect.text)
     }
@@ -111,7 +122,7 @@ class ConversationEngineTest {
         assertTrue(choices.prompt.contains("4321"))
         assertNull(engine.accept("Camille", directory, emptyList(), 0L).action)
         engine.accept("numéro qui finit par 4321", directory, emptyList(), 0L)
-        val action = engine.accept("oui", directory, emptyList(), 0L).action as Action.PrepareWhatsApp
+        val action = engine.accept("oui", directory, emptyList(), 0L).action as Action.SendWhatsApp
         assertEquals(otherNumber, action.contact)
     }
 
@@ -128,7 +139,7 @@ class ConversationEngineTest {
         val directory = listOf(Contact("lea", "Léa Martin", "+33612345678"))
         val engine = ConversationEngine()
         engine.accept("Envoie à LEA MARTIN que bonjour", directory, emptyList(), 0L)
-        val action = engine.accept("oui", directory, emptyList(), 0L).action as Action.PrepareWhatsApp
+        val action = engine.accept("oui", directory, emptyList(), 0L).action as Action.SendWhatsApp
         assertEquals(directory.single(), action.contact)
     }
 
@@ -163,7 +174,7 @@ class ConversationEngineTest {
         val corrected = input(engine, "Non, remplace demain par vendredi")
         assertNull(corrected.action)
         assertTrue(corrected.prompt.contains("Je passe vendredi matin."))
-        val action = input(engine, "oui").action as Action.PrepareWhatsApp
+        val action = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("Je passe vendredi matin.", action.text)
     }
 
@@ -172,7 +183,7 @@ class ConversationEngineTest {
         val engine = readyDraft("demain ou après demain")
         val corrected = input(engine, "remplace demain par vendredi")
         assertTrue(corrected.prompt.contains("sans ambiguïté"))
-        val action = input(engine, "oui").action as Action.PrepareWhatsApp
+        val action = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("demain ou après demain", action.text)
     }
 
@@ -180,7 +191,7 @@ class ConversationEngineTest {
     fun correctionDoesNotReplaceAnUnrelatedWordSuffix() {
         val engine = readyDraft("le lendemain matin")
         input(engine, "remplace demain par vendredi")
-        val action = input(engine, "oui").action as Action.PrepareWhatsApp
+        val action = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("le lendemain matin", action.text)
     }
 
@@ -190,7 +201,7 @@ class ConversationEngineTest {
         input(engine, "modifie le message")
         assertEquals(Stage.DICTATION, engine.stage)
         assertNull(input(engine, "oui").action)
-        val action = input(engine, "oui").action as Action.PrepareWhatsApp
+        val action = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("oui", action.text)
     }
 
@@ -200,7 +211,7 @@ class ConversationEngineTest {
         input(engine, "change de destinataire")
         assertEquals(Stage.RECIPIENT, engine.stage)
         assertNull(input(engine, "Alex Martin").action)
-        val action = input(engine, "oui").action as Action.PrepareWhatsApp
+        val action = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals(alexMartin, action.contact)
         assertEquals("bonjour", action.text)
     }
@@ -239,7 +250,7 @@ class ConversationEngineTest {
         assertEquals(Stage.EXECUTING, engine.stage)
         assertNull(input(engine, "oui").action)
         assertNull(input(engine, "Envoie à Camille que deuxième message").action)
-        engine.complete(action.token, "Préparé ; envoi manuel nécessaire.")
+        engine.complete(action.token, "Action Envoyer déclenchée. Livraison non confirmée.")
         assertEquals(Stage.IDLE, engine.stage)
         assertNull(input(engine, "oui").action)
     }
@@ -250,8 +261,8 @@ class ConversationEngineTest {
         val action = input(engine, "oui").action!!
         engine.complete("wrong-token", "Unexpected")
         assertEquals(Stage.EXECUTING, engine.stage)
-        val valid = engine.complete(action.token, "Préparation terminée.")
-        assertEquals("Préparation terminée.", valid.prompt)
+        val valid = engine.complete(action.token, "Vérification terminée.")
+        assertEquals("Vérification terminée.", valid.prompt)
         assertEquals(Stage.IDLE, engine.stage)
         assertFalse(engine.complete(action.token, "Repeated").prompt.contains("Repeated"))
     }
@@ -269,7 +280,7 @@ class ConversationEngineTest {
     fun independentActionsHaveDifferentTokens() {
         val engine = readyDraft()
         val first = input(engine, "oui").action!!
-        engine.complete(first.token, "Préparé.")
+        engine.complete(first.token, "Action engagée.")
         input(engine, "Envoie à Camille que bonjour")
         val second = input(engine, "oui").action!!
         assertNotEquals(first.token, second.token)
@@ -399,7 +410,7 @@ class ConversationEngineTest {
     fun overlongInputCannotConfirmOrReplaceTheDraft() {
         val engine = readyDraft("bonjour")
         assertNull(input(engine, "oui " + "a".repeat(4_000)).action)
-        val effect = input(engine, "oui").action as Action.PrepareWhatsApp
+        val effect = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("bonjour", effect.text)
     }
 
@@ -410,7 +421,7 @@ class ConversationEngineTest {
         assertNull(input(engine, "a".repeat(2_001)).action)
         assertEquals(Stage.DICTATION, engine.stage)
         input(engine, "Court message")
-        val effect = input(engine, "oui").action as Action.PrepareWhatsApp
+        val effect = input(engine, "oui").action as Action.SendWhatsApp
         assertEquals("Court message", effect.text)
     }
 
@@ -466,7 +477,7 @@ class ConversationEngineTest {
         engine.accept("Envoie à Alex que bonjour", directory, emptyList(), 0L)
         assertEquals(Stage.DISAMBIGUATION, engine.stage)
         engine.accept("numéro qui finit par 4455", directory, emptyList(), 0L)
-        val effect = engine.accept("oui", directory, emptyList(), 0L).action as Action.PrepareWhatsApp
+        val effect = engine.accept("oui", directory, emptyList(), 0L).action as Action.SendWhatsApp
         assertEquals(second, effect.contact)
     }
 
@@ -493,7 +504,7 @@ class ConversationEngineTest {
         val engine = readyDraft()
         engine.promptDelivered(90_000L)
         assertEquals(Stage.CONFIRMATION, engine.stage)
-        val action = input(engine, "oui", now = 149_999L).action as Action.PrepareWhatsApp
+        val action = input(engine, "oui", now = 149_999L).action as Action.SendWhatsApp
         assertEquals("bonjour", action.text)
     }
 
@@ -614,7 +625,7 @@ class ConversationEngineTest {
         assertEquals(Stage.DISAMBIGUATION, engine.stage)
         engine.accept("deux", directory, emptyList(), 0L)
         assertEquals(Stage.CONFIRMATION, engine.stage)
-        val action = engine.accept("oui", directory, emptyList(), 0L).action as Action.PrepareWhatsApp
+        val action = engine.accept("oui", directory, emptyList(), 0L).action as Action.SendWhatsApp
         assertEquals(alexMartin, action.contact)
         assertEquals("bonjour", action.text)
     }

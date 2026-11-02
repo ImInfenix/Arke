@@ -19,7 +19,7 @@ enum class Stage { IDLE, RECIPIENT, DISAMBIGUATION, DICTATION, CONFIRMATION, EXE
 sealed interface Action {
     val token: String
 
-    data class PrepareWhatsApp(
+    data class SendWhatsApp(
         val contact: Contact,
         val text: String,
         override val token: String,
@@ -81,7 +81,7 @@ class ConversationEngine {
             candidates = emptyList()
             confirmationAt = null
             stage = Stage.RECIPIENT
-            return Turn("À quel contact veux-tu préparer un nouveau WhatsApp ?", true)
+            return Turn("À quel contact veux-tu envoyer un nouveau WhatsApp ?", true)
         }
         if (command in EDIT_COMMANDS && (targetContact != null || targetMessage != null)) {
             draftText = null
@@ -272,7 +272,7 @@ class ConversationEngine {
             confirmationDeliveryPending = true
         }
         val prompt = if (contact != null) {
-            "Pour ${contactLabel(contact)} : « $body ». Je peux préparer ce texte dans WhatsApp ; l'envoi restera manuel. Tu confirmes la préparation ?"
+            "Pour ${contactLabel(contact)} : « $body ». Tu confirmes l'envoi dans WhatsApp ?"
         } else {
             "Réponse à ${message!!.sender} : « $body ». Tu confirmes la demande de transmission ?"
         }
@@ -315,7 +315,7 @@ class ConversationEngine {
             return Turn("Le message ou son action de réponse n'est plus disponible. Relis les messages avant de répondre.")
         }
         val token = UUID.randomUUID().toString()
-        val action = if (contact != null) Action.PrepareWhatsApp(contact, draftText!!, token)
+        val action = if (contact != null) Action.SendWhatsApp(contact, draftText!!, token)
         else if (message != null) Action.Reply(message.id, draftText!!, token)
         else {
             reset()
@@ -325,7 +325,7 @@ class ConversationEngine {
         pendingToken = token
         confirmationAt = null
         confirmationDeliveryPending = false
-        return Turn(if (contact != null) "Préparation dans WhatsApp. L'envoi reste manuel." else "Demande de transmission à WhatsApp.", action = action)
+        return Turn(if (contact != null) "Envoi confirmé. Vérification du destinataire dans WhatsApp." else "Demande de transmission à WhatsApp.", action = action)
     }
 
     private fun readMessages(command: String, messages: List<IncomingMessage>, nowMillis: Long): Turn {
@@ -438,7 +438,7 @@ class ConversationEngine {
         val CHANGE_RECIPIENT_COMMANDS = setOf("change de destinataire", "changer de destinataire", "modifie le destinataire")
         val EDIT_COMMANDS = setOf("modifie le message", "modifier le message", "change le message", "corrige le message")
         val REJECT_COMMANDS = setOf("non", "non merci", "n'envoie pas", "ne l'envoie pas", "ne prepare pas")
-        val CONFIRM_COMMANDS = setOf("oui", "oui envoie", "oui, envoie", "envoie", "envoyer", "confirme", "je confirme", "oui je confirme", "oui, je confirme", "oui prepare", "oui, prepare", "prepare", "prepare le message")
+        val CONFIRM_COMMANDS = setOf("oui", "oui envoie", "oui, envoie", "envoie", "envoyer", "confirme", "je confirme", "oui je confirme", "oui, je confirme")
         val CHOICE_WORDS = mapOf("un" to 1, "une" to 1, "premier" to 1, "le premier" to 1, "deux" to 2, "le deuxieme" to 2, "trois" to 3, "le troisieme" to 3, "quatre" to 4, "cinq" to 5)
         val COMPOSE_PATTERN = Regex("^(?:(?:tu peux|peux-tu)\\s+)?(?:(?:envoie|envoyer|[eé]cris|[eé]crire|dis|dire)(?:\\s+(?:un\\s+)?(?:message(?:\\s+whatsapp)?|whatsapp))?\\s+[àa]|pr[eé]viens|pr[eé]venir)\\s*(.*)$", RegexOption.IGNORE_CASE)
         val BODY_SEPARATOR = Regex("\\s+(?:pour lui dire que|pour dire que|que)\\s+|\\s*:\\s*", RegexOption.IGNORE_CASE)

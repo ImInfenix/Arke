@@ -3,7 +3,7 @@
     <string name="notification_service_name">Arke · messages WhatsApp sur demande</string>
     <string name="tagline">Votre voix. Votre téléphone.</string>
     <string name="eyebrow">ASSISTANT LOCAL</string>
-    <string name="prototype_notice">Prototype de faisabilité\nNouveau WhatsApp : préparation uniquement, envoi manuel. Réponse vocale possible si une notification compatible est accessible.</string>
+    <string name="prototype_notice">Prototype de faisabilité\nEnvoi WhatsApp après relecture et confirmation, avec le service d’accessibilité activé. Arke s’arrête si le numéro ou le texte ne peuvent pas être vérifiés.</string>
     <string name="welcome">Que veux-tu faire ?</string>
     <string name="ready">Prêt à vous écouter</string>
     <string name="talk">Parler</string>
@@ -34,4 +34,12 @@
     <string name="contacts_loading">Les contacts sont en cours de chargement. Réessaie dans un instant.</string>
     <string name="resume_listening">Reprendre l’écoute</string>
     <string name="text_only">Voix locale indisponible · affichage uniquement</string>
+    <string name="auto_send_service_name">Arke · envoi WhatsApp confirmé</string>
+    <string name="auto_send_settings">Activer l’envoi automatique WhatsApp</string>
+    <string name="auto_send_explanation">Après chaque relecture et confirmation explicite, Arke ouvre WhatsApp, consulte la fiche du contact pour vérifier son numéro, puis appuie une seule fois sur Envoyer si le texte correspond exactement. Ce service peut lire l’interface WhatsApp et agir dessus. Il reste inactif sans demande confirmée, ne conserve pas les messages et s’arrête au verrouillage ou si la vérification échoue. Activez « Arke · envoi WhatsApp confirmé » dans Accessibilité. Le fonctionnement dépend de votre version de WhatsApp et doit être testé à l’arrêt.</string>
+    <string name="auto_send_description">Envoie un WhatsApp uniquement après votre confirmation dans Arke. Vérifie le numéro sur la fiche du contact et le texte avant un unique appui sur Envoyer. Aucune action sans demande confirmée ; arrêt au verrouillage ou en cas de doute. Le service consulte et contrôle l’interface WhatsApp pendant cette opération, sans enregistrer son contenu.</string>
+    <string name="auto_send_returned">Retour dans Arke : envoi automatique arrêté avant tout nouvel appui.</string>
+    <string name="changed_contact">Le contact a changé ou n’est plus accessible. Aucune demande d’envoi transmise. Recommence pour vérifier le destinataire.</string>
+    <string name="auto_send_in_progress">Une demande d’envoi est en cours de vérification dans WhatsApp. Attends son résultat ou annule.</string>
+    <string name="auto_send_cancelled">Demande d’envoi automatique annulée. Aucun nouvel appui sur Envoyer ne sera tenté.</string>
 </resources>
